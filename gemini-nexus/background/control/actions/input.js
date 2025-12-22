@@ -46,4 +46,16 @@ export class InputActions extends BaseActionHandler {
     async pressKey(args) { return this.keyboard.pressKey(args); }
     
     async attachFile(args) { return this.file.attachFile(args); }
+
+    async handleDialog({ accept = true, promptText }) {
+        try {
+            await this.cmd("Page.handleJavaScriptDialog", {
+                accept: accept,
+                promptText: promptText
+            });
+            return `Dialog handled (accept: ${accept}).`;
+        } catch (e) {
+            return `Error handling dialog: ${e.message}. (Is a dialog open?)`;
+        }
+    }
 }

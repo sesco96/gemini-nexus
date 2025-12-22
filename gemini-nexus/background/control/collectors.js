@@ -121,6 +121,16 @@ export class LogCollector {
                 source: 'runtime',
                 timestamp: Date.now()
             });
+        } else if (method === 'Audits.issueAdded') {
+            const { issue } = params;
+            // Simplify issue details for the LLM
+            const details = JSON.stringify(issue.details);
+            this._add({
+                type: 'issue',
+                text: `${issue.code}: ${details}`,
+                source: 'audits',
+                timestamp: Date.now()
+            });
         }
     }
 
@@ -136,23 +146,52 @@ export class LogCollector {
     }
 }
 
+export class DialogCollector {
+    constructor() {
+        this.activeDialog = null;
+    }
+
+    onEvent(method, params) {
+        if (method === 'Page.javascriptDialogOpening') {
+            this.activeDialog = {
+                type: params.type, // alert, confirm, prompt, beforeunload
+                message: params.message,
+                defaultPrompt: params.defaultPrompt,
+                url: params.url
+            };
+        } else if (method === 'Page.javascriptDialogClosed') {
+            this.activeDialog = null;
+        }
+    }
+
+    getFormatted() {
+        if (!this.activeDialog) return null;
+        return `[Blocking Dialog Active] Type: ${this.activeDialog.type}, Message: "${this.activeDialog.message}"`;
+    }
+}
+
 export class CollectorManager {
     constructor() {
         this.network = new NetworkCollector();
         this.logs = new LogCollector();
+        this.dialogs = new DialogCollector();
     }
 
     handleEvent(method, params) {
         if (method.startsWith('Network.')) {
             this.network.onEvent(method, params);
         }
-        if (method.startsWith('Log.') || method.startsWith('Runtime.')) {
+        if (method.startsWith('Log.') || method.startsWith('Runtime.') || method.startsWith('Audits.')) {
             this.logs.onEvent(method, params);
+        }
+        if (method.startsWith('Page.javascriptDialog')) {
+            this.dialogs.onEvent(method, params);
         }
     }
 
     clear() {
         this.network = new NetworkCollector();
         this.logs = new LogCollector();
+        this.dialogs = new DialogCollector();
     }
 }

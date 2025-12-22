@@ -1,4 +1,11 @@
 // content.js v4.0.0 -> content/index.js
+
+// Fix: Inline constants because Content Scripts do not support ES Module imports natively in this configuration.
+const DEFAULT_SHORTCUTS = {
+    quickAsk: "Ctrl+G",
+    openPanel: "Alt+S"
+};
+
 console.log("%c Gemini Nexus v4.0.0 Ready ", "background: #333; color: #00ff00; font-size: 16px");
 
 // Initialize Helpers
@@ -104,10 +111,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // --- Shortcut Configuration ---
-let appShortcuts = {
-    quickAsk: "Ctrl+G",
-    openPanel: "Alt+S"
-};
+let appShortcuts = { ...DEFAULT_SHORTCUTS };
 
 // Initial Load of Settings
 chrome.storage.local.get(['geminiShortcuts', 'geminiTextSelectionEnabled', 'geminiImageToolsEnabled'], (result) => {

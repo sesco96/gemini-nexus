@@ -91,7 +91,10 @@ export class BrowserConnection {
                         await this.sendCommand("Log.enable");
                         await this.sendCommand("Runtime.enable");
                         // Page domain is often enabled by actions, but good to have for lifecycle
+                        // Also enables Page.javascriptDialogOpening events
                         await this.sendCommand("Page.enable");
+                        // Enable Audits for issues (CORS, mixed content, etc)
+                        await this.sendCommand("Audits.enable");
                     } catch (e) {
                         console.warn("Failed to enable collection domains:", e);
                     }

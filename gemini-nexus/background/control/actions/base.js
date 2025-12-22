@@ -26,7 +26,38 @@ export class BaseActionHandler {
         const backendNodeId = this.snapshotManager.getBackendNodeId(uid);
         if (!backendNodeId) throw new Error(`Node with uid ${uid} not found in snapshot. Take a snapshot first.`);
 
+        // Trigger highlight for visual feedback on interaction
+        this.highlight(uid).catch(() => {});
+
         const { object } = await this.cmd("DOM.resolveNode", { backendNodeId });
         return object.objectId;
+    }
+
+    async highlight(uid) {
+        const backendNodeId = this.snapshotManager.getBackendNodeId(uid);
+        if (!backendNodeId) return;
+
+        try {
+            await this.cmd("Overlay.enable");
+            await this.cmd("Overlay.highlightNode", {
+                backendNodeId: backendNodeId,
+                highlightConfig: {
+                    showInfo: true,
+                    showRulers: false,
+                    showExtensionLines: false,
+                    contentColor: { r: 11, g: 87, b: 208, a: 0.3 }, // Gemini Blue fill
+                    paddingColor: { r: 11, g: 87, b: 208, a: 0.1 },
+                    borderColor: { r: 11, g: 87, b: 208, a: 0.8 }  // Border
+                }
+            });
+
+            // Auto-hide after 1.5 seconds
+            setTimeout(() => {
+                this.cmd("Overlay.hideHighlight").catch(() => {});
+            }, 1500);
+
+        } catch (e) {
+            // Ignore highlight errors (e.g. node detached)
+        }
     }
 }

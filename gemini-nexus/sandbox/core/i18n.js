@@ -1,5 +1,4 @@
 
-
 // sandbox/core/i18n.js
 
 export const translations = {
@@ -45,6 +44,9 @@ export const translations = {
         "shortcutSwitchModel": "Switch Model (in Input)",
         "resetDefault": "Reset Default",
         "saveChanges": "Save Changes",
+        "system": "System",
+        "debugLogs": "Debug Logs",
+        "downloadLogs": "Download Logs",
         "about": "About",
         "sourceCode": "Source Code",
         "buyMeCoffee": "Buy Me a Coffee",
@@ -131,6 +133,9 @@ export const translations = {
         "shortcutSwitchModel": "切换模型 (输入框内)",
         "resetDefault": "恢复默认",
         "saveChanges": "保存更改",
+        "system": "系统",
+        "debugLogs": "调试日志",
+        "downloadLogs": "下载日志",
         "about": "关于",
         "sourceCode": "源代码",
         "buyMeCoffee": "请我喝咖啡",

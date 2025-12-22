@@ -135,17 +135,22 @@ export function appendMessage(container, text, role, attachment = null, thoughts
     }
 
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    
+    // --- Scroll Logic ---
+    // Instead of scrolling to bottom, we scroll to the top of the NEW message.
+    // This allows users to read from the start while content streams in below.
+    setTimeout(() => {
+        const topPos = div.offsetTop - 20; // 20px padding context
+        container.scrollTo({
+            top: topPos,
+            behavior: 'smooth'
+        });
+    }, 10);
 
     // Return controller
     return {
         div,
         update: (newText, newThoughts) => {
-            // Check if user is near bottom before update
-            const threshold = 50; 
-            const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-            const isAtBottom = distanceToBottom <= threshold;
-
             if (newText !== undefined) {
                 currentText = newText;
                 if (contentDiv) {
@@ -161,10 +166,9 @@ export function appendMessage(container, text, role, attachment = null, thoughts
                 }
             }
             
-            // Smart scroll: Only scroll to bottom if user was already at bottom
-            if (isAtBottom) {
-                container.scrollTop = container.scrollHeight;
-            }
+            // Note: We removed the auto-scroll-to-bottom logic here.
+            // If the user is at the start of the message, we want them to stay there
+            // as the content expands downwards.
         },
         // Function to update images if they arrive late (though mostly synchronous in final reply)
         addImages: (images) => {
@@ -178,7 +182,7 @@ export function appendMessage(container, text, role, attachment = null, thoughts
 
                 // Insert before copy button
                 div.insertBefore(grid, div.querySelector('.copy-btn'));
-                container.scrollTop = container.scrollHeight;
+                // Do not force scroll here either
             }
         }
     };

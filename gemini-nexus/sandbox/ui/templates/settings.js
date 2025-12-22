@@ -1,5 +1,4 @@
 
-
 export const SettingsTemplate = `
     <!-- SETTINGS -->
     <div id="settings-modal" class="settings-modal">
@@ -108,6 +107,14 @@ export const SettingsTemplate = `
                     <div class="settings-actions">
                         <button id="reset-shortcuts" class="btn-secondary" data-i18n="resetDefault">Reset Default</button>
                         <button id="save-shortcuts" class="btn-primary" data-i18n="saveChanges">Save Changes</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h4 data-i18n="system">System</h4>
+                    <div class="shortcut-row">
+                        <label data-i18n="debugLogs">Debug Logs</label>
+                        <button id="download-logs" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" data-i18n="downloadLogs">Download Logs</button>
                     </div>
                 </div>
 

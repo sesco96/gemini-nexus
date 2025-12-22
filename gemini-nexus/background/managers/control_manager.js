@@ -15,16 +15,36 @@ export class BrowserControlManager {
         this.actions = new BrowserActions(this.connection, this.snapshotManager);
     }
 
+    // --- Internal Helpers ---
+
+    async ensureConnection() {
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        if (!tab) return false;
+        
+        // Check restricted URLs before trying to attach
+        if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:'))) {
+            return false;
+        }
+
+        await this.connection.attach(tab.id);
+        return true;
+    }
+
+    async getSnapshot() {
+        if (!this.connection.attached) {
+             const success = await this.ensureConnection();
+             if (!success) return null;
+        }
+        return await this.snapshotManager.takeSnapshot();
+    }
+
     // --- Execution Entry Point ---
 
     async execute(toolCall) {
         try {
             const { name, args } = toolCall;
-            const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-            if (!tab) return "Error: No active tab found.";
-
-            // Ensure debugger is attached to the active tab
-            await this.connection.attach(tab.id);
+            const success = await this.ensureConnection();
+            if (!success) return "Error: No active tab found or restricted URL.";
 
             console.log(`[MCP] Executing tool: ${name}`, args);
 
@@ -61,10 +81,17 @@ export class BrowserControlManager {
                 case 'press_key':
                     result = await this.actions.pressKey(args);
                     break;
+                case 'handle_dialog':
+                    result = await this.actions.input.handleDialog(args);
+                    break;
                 case 'wait_for':
                     result = await this.actions.waitFor(args);
                     break;
                 case 'evaluate_script':
+                    result = await this.actions.evaluateScript(args);
+                    break;
+                case 'run_javascript':
+                case 'run_script': // alias
                     result = await this.actions.evaluateScript(args);
                     break;
                 case 'list_pages':

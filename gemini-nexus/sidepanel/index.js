@@ -164,7 +164,19 @@ window.addEventListener('message', (event) => {
     // --- Standard Message Forwarding ---
     
     if (action === 'FORWARD_TO_BACKGROUND') {
-        chrome.runtime.sendMessage(payload).catch(() => {});
+        chrome.runtime.sendMessage(payload)
+            .then(response => {
+                // If it's a request demanding a reply (like GET_LOGS), send it back
+                if (payload.action === 'GET_LOGS' && response && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({
+                        action: 'BACKGROUND_MESSAGE',
+                        payload: response
+                    }, '*');
+                }
+            })
+            .catch(err => {
+                console.warn("Error forwarding to background:", err);
+            });
     }
     
     // --- Data Requests from Sandbox ---
@@ -177,6 +189,20 @@ window.addEventListener('message', (event) => {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        return;
+    }
+
+    if (action === 'DOWNLOAD_LOGS') {
+        const { text, filename } = payload;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || `gemini-nexus-logs.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         return;
     }
 

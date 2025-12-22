@@ -1,16 +1,18 @@
 
 // sandbox/ui/settings.js
-import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage } from '../../lib/messaging.js';
+import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, sendToBackground } from '../../lib/messaging.js';
 import { setLanguagePreference, getLanguagePreference } from '../core/i18n.js';
 import { SettingsView } from './settings/view.js';
+import { DEFAULT_SHORTCUTS } from '../../lib/constants.js';
 
 export class SettingsController {
     constructor(callbacks) {
         this.callbacks = callbacks || {};
         
         // State
-        this.shortcuts = { quickAsk: "Ctrl+G", openPanel: "Alt+S" };
-        this.defaultShortcuts = { ...this.shortcuts };
+        this.defaultShortcuts = { ...DEFAULT_SHORTCUTS };
+        this.shortcuts = { ...this.defaultShortcuts };
+        
         this.textSelectionEnabled = true;
         this.imageToolsEnabled = true;
         this.accountIndices = "0";
@@ -26,7 +28,8 @@ export class SettingsController {
             
             onTextSelectionChange: (val) => { this.textSelectionEnabled = (val === 'on' || val === true); saveTextSelectionToStorage(this.textSelectionEnabled); },
             onImageToolsChange: (val) => { this.imageToolsEnabled = (val === 'on' || val === true); saveImageToolsToStorage(this.imageToolsEnabled); },
-            onSidebarBehaviorChange: (val) => saveSidebarBehaviorToStorage(val)
+            onSidebarBehaviorChange: (val) => saveSidebarBehaviorToStorage(val),
+            onDownloadLogs: () => this.downloadLogs()
         });
         
         // External Trigger Binding
@@ -37,6 +40,13 @@ export class SettingsController {
                 if (this.callbacks.onOpen) this.callbacks.onOpen();
             });
         }
+        
+        // Listen for log data
+        window.addEventListener('message', (e) => {
+            if (e.data.action === 'BACKGROUND_MESSAGE' && e.data.payload && e.data.payload.logs) {
+                this.saveLogFile(e.data.payload.logs);
+            }
+        });
     }
 
     open() {
@@ -85,6 +95,32 @@ export class SettingsController {
     resetSettings() {
         this.view.setShortcuts(this.defaultShortcuts);
         this.view.setAccountIndices("0");
+    }
+    
+    downloadLogs() {
+        sendToBackground({ action: 'GET_LOGS' });
+    }
+    
+    saveLogFile(logs) {
+        if (!logs || logs.length === 0) {
+            alert("No logs to download.");
+            return;
+        }
+        
+        const text = logs.map(l => {
+            const time = new Date(l.timestamp).toISOString();
+            const dataStr = l.data ? ` | Data: ${JSON.stringify(l.data)}` : '';
+            return `[${time}] [${l.level}] [${l.context}] ${l.message}${dataStr}`;
+        }).join('\n');
+        
+        // Send to parent to handle download (Sandbox restriction workaround)
+        window.parent.postMessage({
+            action: 'DOWNLOAD_LOGS',
+            payload: {
+                text: text,
+                filename: `gemini-nexus-logs-${Date.now()}.txt`
+            }
+        }, '*');
     }
 
     // --- State Updates (From View or Storage) ---

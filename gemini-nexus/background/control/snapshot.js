@@ -4,6 +4,7 @@
 /**
  * Handles Accessibility Tree generation and UID mapping.
  * Converts complex DOM structures into an LLM-friendly, token-efficient text tree.
+ * Matches logic from Chrome DevTools MCP formatters.
  */
 export class SnapshotManager {
     constructor(connection) {
@@ -26,6 +27,7 @@ export class SnapshotManager {
     async takeSnapshot(args = {}) {
         const verbose = args.verbose === true;
 
+        // Ensure domains are enabled
         await this.connection.sendCommand("DOM.enable");
         await this.connection.sendCommand("Accessibility.enable");
         
@@ -53,7 +55,8 @@ export class SnapshotManager {
             return `"${s.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`;
         };
 
-        // Mappings for boolean capabilities vs states
+        // Mappings for boolean capabilities (property name) -> attribute name
+        // Based on chrome-devtools-mcp snapshotFormatter.ts
         const booleanPropertyMap = {
             disabled: 'disableable',
             expanded: 'expandable',
@@ -80,13 +83,12 @@ export class SnapshotManager {
             const name = getVal(node.name);
             
             // Skip purely structural/generic roles unless they have a specific name
-            if (role === 'generic' || role === 'StructuralContainer' || role === 'div' || role === 'text') {
-                 if (name) return true;
-                 // Keep if it has generic properties that might be interesting? 
-                 // For token efficiency, we bias towards removing.
+            if (role === 'generic' || role === 'StructuralContainer' || role === 'div' || role === 'text' || role === 'none' || role === 'presentation') {
+                 if (name && name.trim().length > 0) return true;
+                 // Keep if it has input-related properties? 
+                 // For token efficiency, we bias towards removing generic containers.
                  return false; 
             }
-            if (role === 'none' || role === 'presentation') return false;
             return true;
         };
 
@@ -141,14 +143,12 @@ export class SnapshotManager {
                         
                         const val = propsMap[key];
                         
-                        if (key in booleanPropertyMap) {
-                            // Capability
-                            parts.push(booleanPropertyMap[key]);
-                            // State
-                            if (val === true) {
-                                parts.push(key);
+                        if (typeof val === 'boolean') {
+                            // Check if this boolean property maps to a capability (e.g. focused -> focusable)
+                            if (key in booleanPropertyMap) {
+                                parts.push(booleanPropertyMap[key]);
                             }
-                        } else if (typeof val === 'boolean') {
+                            // If true, also print the state name itself (e.g. focused)
                             if (val === true) {
                                 parts.push(key);
                             }

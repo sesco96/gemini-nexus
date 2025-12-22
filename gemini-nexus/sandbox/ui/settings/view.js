@@ -30,6 +30,8 @@ export class SettingsView {
             btnSave: get('save-shortcuts'),
             btnReset: get('reset-shortcuts'),
             
+            btnDownloadLogs: get('download-logs'),
+            
             starEl: get('star-count'),
             
             sidebarRadios: document.querySelectorAll('input[name="sidebar-behavior"]')
@@ -39,7 +41,7 @@ export class SettingsView {
     bindEvents() {
         const { modal, btnClose, btnSave, btnReset, themeSelect, languageSelect, 
                 inputQuickAsk, inputOpenPanel, textSelectionToggle, imageToolsToggle, 
-                accountIndicesInput, sidebarRadios } = this.elements;
+                accountIndicesInput, sidebarRadios, btnDownloadLogs } = this.elements;
 
         // Modal actions
         if (btnClose) btnClose.addEventListener('click', () => this.close());
@@ -52,6 +54,10 @@ export class SettingsView {
         // Action Buttons
         if (btnSave) btnSave.addEventListener('click', () => this.handleSave());
         if (btnReset) btnReset.addEventListener('click', () => this.handleReset());
+        
+        if (btnDownloadLogs) {
+            btnDownloadLogs.addEventListener('click', () => this.fire('onDownloadLogs'));
+        }
 
         // Instant Updates
         if (themeSelect) {

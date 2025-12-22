@@ -4,7 +4,7 @@ import { BaseActionHandler } from '../base.js';
 
 export class MouseActions extends BaseActionHandler {
     
-    async clickElement({ uid }) {
+    async clickElement({ uid, dblClick = false }) {
         const objectId = await this.getObjectIdFromUid(uid);
         const backendNodeId = this.snapshotManager.getBackendNodeId(uid);
 
@@ -22,18 +22,31 @@ export class MouseActions extends BaseActionHandler {
 
             // 3. Dispatch Trusted Input Events wrapped in WaitHelper
             await this.waitHelper.execute(async () => {
+                // Move to location
                 await this.cmd("Input.dispatchMouseEvent", { 
                     type: "mouseMoved", x, y 
                 });
+
+                // First Click
                 await this.cmd("Input.dispatchMouseEvent", { 
                     type: "mousePressed", x, y, button: "left", clickCount: 1 
                 });
                 await this.cmd("Input.dispatchMouseEvent", { 
                     type: "mouseReleased", x, y, button: "left", clickCount: 1 
                 });
+
+                // Second Click (if requested)
+                if (dblClick) {
+                    await this.cmd("Input.dispatchMouseEvent", { 
+                        type: "mousePressed", x, y, button: "left", clickCount: 2 
+                    });
+                    await this.cmd("Input.dispatchMouseEvent", { 
+                        type: "mouseReleased", x, y, button: "left", clickCount: 2 
+                    });
+                }
             });
 
-            return `Clicked element ${uid} at ${Math.round(x)},${Math.round(y)}`;
+            return `Clicked element ${uid} at ${Math.round(x)},${Math.round(y)}${dblClick ? ' (Double Click)' : ''}`;
 
         } catch (e) {
             console.warn("Physical click failed, attempting JS fallback:", e);

@@ -6,7 +6,6 @@
 
     // Simple helper
     const isZh = navigator.language.startsWith('zh');
-    const DEFAULT_LOADING = isZh ? "Gemini 正在思考..." : "Gemini is thinking...";
     const DEFAULT_TITLE = isZh ? "询问" : "Ask";
 
     /**
@@ -73,8 +72,12 @@
 
         showLoading(msg) {
             if (!this.elements.askWindow) return;
-            const text = msg || DEFAULT_LOADING;
-            this.elements.resultText.innerHTML = `<div style="color: #888; font-style: italic; margin-top: 10px;">${text}</div>`;
+            
+            if (msg) {
+                this.elements.resultText.innerHTML = `<div style="color: #888; font-style: italic; margin-top: 10px;">${msg}</div>`;
+            } else {
+                this.elements.resultText.innerHTML = '';
+            }
             
             // Show Footer with Stop button
             if (this.elements.windowFooter) this.elements.windowFooter.classList.remove('hidden');

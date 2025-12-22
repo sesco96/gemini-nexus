@@ -11,7 +11,7 @@ const NETWORK_CONDITIONS = {
 };
 
 export class EmulationActions extends BaseActionHandler {
-    async emulate({ networkConditions, cpuThrottlingRate }) {
+    async emulate({ networkConditions, cpuThrottlingRate, geolocation }) {
         let response = [];
 
         // 1. Network Emulation
@@ -43,6 +43,22 @@ export class EmulationActions extends BaseActionHandler {
             await this.cmd('Emulation.setCPUThrottlingRate', { rate });
             this.waitHelper.updateMultipliers(rate, this.waitHelper.networkMultiplier);
             response.push(`CPU throttling set to ${rate}x`);
+        }
+
+        // 3. Geolocation
+        if (geolocation !== undefined) {
+            if (geolocation === null) {
+                await this.cmd('Emulation.clearGeolocationOverride');
+                response.push('Geolocation override cleared');
+            } else {
+                const { latitude, longitude, accuracy = 1 } = geolocation;
+                await this.cmd('Emulation.setGeolocationOverride', {
+                    latitude: parseFloat(latitude),
+                    longitude: parseFloat(longitude),
+                    accuracy: accuracy
+                });
+                response.push(`Geolocation set to Lat: ${latitude}, Lon: ${longitude}`);
+            }
         }
 
         return response.length ? response.join(', ') : "No emulation changes applied.";

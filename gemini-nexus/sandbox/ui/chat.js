@@ -63,7 +63,16 @@ export class ChatController {
     scrollToBottom() {
         if (this.historyDiv) {
             setTimeout(() => {
-                this.historyDiv.scrollTop = this.historyDiv.scrollHeight;
+                // Scroll to the start of the last message to ensure visibility from the beginning
+                const lastMsg = this.historyDiv.lastElementChild;
+                if (lastMsg) {
+                    this.historyDiv.scrollTo({
+                        top: lastMsg.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                } else {
+                    this.historyDiv.scrollTop = this.historyDiv.scrollHeight;
+                }
             }, 50);
         }
     }
@@ -85,7 +94,7 @@ export class ChatController {
     setLoading(isLoading) {
         // Toggle button between Send and Stop
         if(isLoading) {
-            this.updateStatus(t('thinking'));
+            this.updateStatus(""); // Clear status text, only show spinner
             if (this.statusDiv) this.statusDiv.classList.add('thinking');
 
             if (this.sendBtn) {

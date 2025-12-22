@@ -1,1 +1,7 @@
-// This file is unused. The application logic resides in content/, background/, and sandbox/ directories.
+
+// This file is deprecated and can be safely deleted.
+// The application uses a Vanilla JS architecture with ES Modules located in:
+// - sidepanel/
+// - sandbox/
+// - content/
+// - background/

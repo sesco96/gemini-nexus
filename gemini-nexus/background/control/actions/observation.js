@@ -4,7 +4,7 @@ import { BaseActionHandler } from './base.js';
 
 export class ObservationActions extends BaseActionHandler {
     
-    async takeScreenshot() {
+    async takeScreenshot({ filePath } = {}) {
         try {
             const dataUrl = await new Promise(resolve => {
                 chrome.tabs.captureVisibleTab(null, { format: 'png' }, (data) => {
@@ -19,8 +19,34 @@ export class ObservationActions extends BaseActionHandler {
 
             if (!dataUrl) return "Error: Failed to capture screenshot.";
 
+            let message = `Screenshot taken (Base64 length: ${dataUrl.length}).`;
+
+            // If a filePath (filename) is provided, download it
+            if (filePath) {
+                try {
+                    // Extract safe filename from path
+                    const filename = filePath.split(/[/\\]/).pop() || 'screenshot.png';
+
+                    const downloadId = await new Promise((resolve, reject) => {
+                        chrome.downloads.download({
+                            url: dataUrl,
+                            filename: filename,
+                            saveAs: false // Don't prompt save as dialog
+                        }, (id) => {
+                            if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+                            else resolve(id);
+                        });
+                    });
+                    message += ` Saved to ${filename} (Download ID: ${downloadId}).`;
+                } catch (err) {
+                    message += ` Failed to save: ${err.message}`;
+                }
+            } else {
+                message += " [Internal: Image attached to chat history]";
+            }
+
             return {
-                text: `Screenshot taken (Base64 length: ${dataUrl.length}). [Internal: Image attached to chat history]`,
+                text: message,
                 image: dataUrl
             };
         } catch (e) {
@@ -29,11 +55,44 @@ export class ObservationActions extends BaseActionHandler {
     }
 
     async evaluateScript({ script }) {
-        const res = await this.cmd("Runtime.evaluate", {
-            expression: script,
-            returnByValue: true
-        });
-        return res.result ? JSON.stringify(res.result.value) : "undefined";
+        try {
+            // Wrap in async IIFE to support top-level await and ensure return value capture
+            // We use 'try-catch' inside the script to return errors as values
+            const expression = `
+                (async () => {
+                    try {
+                        ${script}
+                    } catch (e) {
+                        return "Error: " + e.message + "\\nStack: " + e.stack;
+                    }
+                })()
+            `;
+
+            const res = await this.cmd("Runtime.evaluate", {
+                expression: expression,
+                returnByValue: true,
+                awaitPromise: true // Allow async operations
+            });
+
+            if (res.exceptionDetails) {
+                return `Script Exception: ${res.exceptionDetails.text} ${res.exceptionDetails.exception ? res.exceptionDetails.exception.description : ''}`;
+            }
+
+            if (res.result) {
+                if (res.result.type === 'undefined') return "undefined";
+                
+                // Return structured JSON for objects, string for primitives
+                const val = res.result.value;
+                if (typeof val === 'object' && val !== null) {
+                    return JSON.stringify(val, null, 2);
+                }
+                return String(val);
+            }
+            
+            return "undefined";
+        } catch (e) {
+            return `Error evaluating script: ${e.message}`;
+        }
     }
 
     async waitFor({ text, timeout = 5000 }) {
@@ -69,7 +128,16 @@ export class ObservationActions extends BaseActionHandler {
 
     async getLogs() {
         const logs = this.connection.collectors.logs.getFormatted();
-        return logs || "No logs captured.";
+        const dialogStatus = this.connection.collectors.dialogs.getFormatted();
+        
+        let output = "";
+        
+        if (dialogStatus) {
+            output += `!!! ALERT: ${dialogStatus} !!!\n(You must use 'handle_dialog' to clear this before proceeding)\n\n`;
+        }
+        
+        output += (logs || "No logs captured.");
+        return output;
     }
 
     async getNetworkActivity() {
