@@ -26,14 +26,27 @@ Gemini Nexus 是一款深度集成 Google Gemini 能力的 Chrome 扩展程序�
 
 ## ❤️ 赞助与支持
 
-如果您觉得 Gemini Nexus 帮助到了您，并希望支持该项目的持续维护与功能开发，欢迎通过 **爱发电** 请开发者喝杯咖啡！您的支持是我不断优化功能的最大动力。☕
+如果您觉得 Gemini Nexus 帮助到了您，并希望支持该项目的持续维护与功能开发，欢迎请开发者喝杯咖啡！您的支持是我不断优化功能的最大动力。☕
+
+**赞赏通道（爱发电）：** [https://afdian.com/a/gemini-nexus](https://afdian.com/a/gemini-nexus)
 
 <div align="center">
-  <a href="https://afdian.com/a/yeahhe" target="_blank">
+  <a href="https://afdian.com/a/gemini-nexus" target="_blank">
     <img src="https://github.com/user-attachments/assets/1a9d6576-0541-453d-ae58-43bb71d73f91" width="220" alt="爱发电赞赏码">
   </a>
-  <p><b>扫码通过“爱发电”支持我</b></p>
+  <p><b>扫描上方二维码或 <a href="https://afdian.com/a/gemini-nexus" target="_blank">点击此处</a> 前往爱发电支持我</b></p>
 </div>
+
+---
+
+## 🚀 安装教程
+
+1.  访问 [Releases](https://github.com/yeahhe365/gemini-nexus/releases) 页面。
+2.  下载最新版本的资源压缩包（例如 `gemini-nexus-v4.0.0.zip`）。
+3.  将下载的 ZIP 文件解压到本地文件夹。
+4.  打开 Chrome 浏览器（或 Edge 等 Chromium 浏览器），访问 `chrome://extensions/`。
+5.  在页面右上角开启 **“开发者模式”**。
+6.  点击左上角的 **“加载已解压的扩展程序”**，选择刚才解压出的文件夹即可完成安装。
 
 ---
 
@@ -43,15 +56,6 @@ Gemini Nexus 是一款深度集成 Google Gemini 能力的 Chrome 扩展程序�
 *   **Sandbox**：安全的 iframe 环境，负责 Markdown 转换和 UI 渲染逻辑 (`sandbox/`)。
 *   **Content Scripts**：注入到网页中的脚本，负责悬浮工具栏、划词监听和页面交互 (`content/`)。
 *   **Background**：插件的“大脑”，负责 API 通信、会话管理、账号轮询和自动化控制 (`background/`)。
-
-## 🚀 安装教程
-
-1.  访问 [Releases](https://github.com/yeahhe365/gemini-nexus/releases) 页面。
-2.  下载最新版本的资源压缩包（例如 `gemini-nexus-v4.0.0.zip`）。
-3.  将下载的 ZIP 文件解压到本地文件夹。
-4.  打开 Chrome 浏览器（或 Edge 等 Chromium 浏览器），访问 `chrome://extensions/`。
-5.  在页面右上角开启**“开发者模式”**。
-6.  点击左上角的**“加载已解压的扩展程序”**，选择刚才解压出的文件夹即可完成安装。
 
 ## 📄 许可证
 
